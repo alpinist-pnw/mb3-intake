@@ -1,18 +1,14 @@
 import { initializeApp } from "firebase/app";
-import { getDatabase } from "firebase/database";
+import { getFirestore } from "firebase/firestore";
 
-// ─── REPLACE THESE WITH YOUR FIREBASE PROJECT VALUES ─────────────────────────
-// Firebase Console → Project Settings → Your Apps → SDK setup and configuration
 const firebaseConfig = {
-  apiKey: "AIzaSyCexkTA6XtK1YgGXkDcmZkVVfVjCN2tv2k",
-  authDomain: "mb3-intake.firebaseapp.com",
-  databaseURL: "https://mb3-intake-default-rtdb.firebaseio.com",
-  projectId: "mb3-intake",
-  storageBucket: "mb3-intake.firebasestorage.app",
-  messagingSenderId: "461942803642",
-  appId: "1:461942803642:web:dcdb52e6341e03f4d34683",
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
+  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
+  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
+  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
+  appId: import.meta.env.VITE_FIREBASE_APP_ID,
 };
-// ─────────────────────────────────────────────────────────────────────────────
 
 const app = initializeApp(firebaseConfig);
-export const db = getDatabase(app);
+export const db = getFirestore(app);

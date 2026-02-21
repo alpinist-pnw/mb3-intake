@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from "react";
-import { ref, onValue, update } from "firebase/database";
+import { doc, onSnapshot, setDoc } from "firebase/firestore";
 import { db } from "./firebase";
 import { SECTIONS } from "./questions";
 import { buildScopeDoc } from "./export";
@@ -64,7 +64,7 @@ function OptionBtn({ label, selected, color, isRadio, onClick }) {
 // ── Join screen ───────────────────────────────────────────────────────────────
 function JoinScreen({ onJoin }) {
   const [code, setCode] = useState("");
-  const [err, setErr]   = useState("");
+  const [err, setErr] = useState("");
 
   const join = () => {
     const clean = code.trim().toUpperCase().replace(/[^A-Z0-9]/g, "");
@@ -107,23 +107,23 @@ function JoinScreen({ onJoin }) {
 
 // ── Main app ──────────────────────────────────────────────────────────────────
 export default function App() {
-  const [sessionId, setSessionId]       = useState(null);
-  const [answers, setAnswers]           = useState({});
+  const [sessionId, setSessionId] = useState(null);
+  const [answers, setAnswers] = useState({});
   const [activeSection, setActiveSection] = useState(0);
-  const [syncStatus, setSyncStatus]     = useState("connecting");
-  const [showExport, setShowExport]     = useState(false);
-  const [copied, setCopied]             = useState(false);
+  const [syncStatus, setSyncStatus] = useState("connecting");
+  const [showExport, setShowExport] = useState(false);
+  const [copied, setCopied] = useState(false);
   const saveTimers = useRef({});
 
-  // ── Real-time Firebase listener ──
+  // ── Real-time Firestore listener ──
   useEffect(() => {
     if (!sessionId) return;
     setSyncStatus("connecting");
-    const dbRef = ref(db, `sessions/${sessionId}/answers`);
-    const unsub = onValue(
-      dbRef,
-      snap => {
-        setAnswers(snap.val() || {});
+    const docRef = doc(db, "sessions", sessionId);
+    const unsub = onSnapshot(
+      docRef,
+      snapshot => {
+        setAnswers(snapshot.data()?.answers || {});
         setSyncStatus("live");
       },
       () => setSyncStatus("error")
@@ -131,23 +131,24 @@ export default function App() {
     return () => unsub();
   }, [sessionId]);
 
-  // ── Write to Firebase, debounced ──
+  // ── Write to Firestore, debounced ──
   const handleChange = useCallback((qId, value) => {
     setAnswers(prev => ({ ...prev, [qId]: value }));
     setSyncStatus("saving");
     if (saveTimers.current[qId]) clearTimeout(saveTimers.current[qId]);
     saveTimers.current[qId] = setTimeout(async () => {
       try {
-        await update(ref(db, `sessions/${sessionId}/answers`), { [qId]: value });
+        const docRef = doc(db, "sessions", sessionId);
+        await setDoc(docRef, { answers: { [qId]: value } }, { merge: true });
         setSyncStatus("live");
       } catch { setSyncStatus("error"); }
     }, 500);
   }, [sessionId]);
 
   const section = SECTIONS[activeSection];
-  const allQs   = SECTIONS.flatMap(s => s.questions);
+  const allQs = SECTIONS.flatMap(s => s.questions);
   const answered = allQs.filter(q => answers[q.id]).length;
-  const pct      = Math.round((answered / allQs.length) * 100);
+  const pct = Math.round((answered / allQs.length) * 100);
 
   const exportDoc = () => {
     const blob = new Blob([buildScopeDoc(answers, sessionId)], { type: "text/plain" });
