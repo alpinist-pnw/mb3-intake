@@ -6,7 +6,7 @@ import { getDatabase } from "firebase/database";
 const firebaseConfig = {
   apiKey: "AIzaSyCexkTA6XtK1YgGXkDcmZkVVfVjCN2tv2k",
   authDomain: "mb3-intake.firebaseapp.com",
-  databaseURL: "mb3-intake.firebaseapp.com",
+  databaseURL: "https://mb3-intake-default-rtdb.firebaseio.com",
   projectId: "mb3-intake",
   storageBucket: "mb3-intake.firebasestorage.app",
   messagingSenderId: "461942803642",
